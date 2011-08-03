@@ -3,7 +3,9 @@ module RealEx
     
     class Transaction < RealEx::Transaction
       def authorize!
-        RealEx::Response.new_from_xml(RealEx::Client.call(real_vault_uri, to_xml))
+        uri = (request_type == 'receipt-in') ? remote_uri : real_vault_uri
+        xml = RealEx::Client.call(uri, to_xml)
+        RealEx::Response.new_from_xml(xml)
       end
     end
     
