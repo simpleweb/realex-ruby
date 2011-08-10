@@ -1,22 +1,29 @@
 module RealEx
   module Recurring
-    
+
     class Transaction < RealEx::Transaction
       def authorize!
-        uri = (request_type == 'receipt-in') ? remote_uri : real_vault_uri
+        uri = (request_type == 'receipt-in') ? receipt_in_uri : real_vault_uri
         xml = RealEx::Client.call(uri, to_xml)
+
+        if request_type == 'receipt-in'
+          xml = RealEx::Client.call(receipt_in_uri, to_xml)
+        else
+          xml = RealEx::Client.call(uri, to_xml)
+        end
+
         RealEx::Response.new_from_xml(xml)
       end
     end
-    
+
     class Payer < Transaction
       attributes :type, :reference, :title, :firstname, :lastname, :address, :company, :comments
       attributes :update
-      
+
       def request_type
         @request_type = update == true ? 'payer-edit' : 'payer-new'
       end
-      
+
       def to_xml
         super do |per|
           per.payer(:type => type, :ref => reference) do |payer|
@@ -25,13 +32,13 @@ module RealEx
             payer.lastname lastname
             payer.company company
             payer.address do |add|
-                add.line1 address.line1
-                add.line1 address.line2
-                add.line3 address.line3
-                add.city address.city
-                add.county address.county
-                add.postcode address.post_code
-                add.country(address.country, :country_code => address.country_code)
+              add.line1 address.line1
+              add.line1 address.line2
+              add.line3 address.line3
+              add.city address.city
+              add.county address.county
+              add.postcode address.post_code
+              add.country(address.country, :country_code => address.country_code)
             end
             if address.phone_numbers.kind_of?(Hash)
               payer.phonenumbers do |numbers|
