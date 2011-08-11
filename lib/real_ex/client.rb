@@ -22,11 +22,18 @@ module RealEx
         uri = URI.parse(url)
 
         https = (uri.scheme == 'https')
-        port = https ? 443 : 80
+        if [80, 443].include?(uri.port)
+          port = https ? 443 : 80
+        else
+          port = uri.port
+        end
 
         h = Net::HTTP.new(uri.host, port)
         h.use_ssl = https
         response = h.request_post(uri.path, xml)
+        puts "** HTTP POST response:"
+        puts response.body
+        
         result = Nokogiri.XML(response.body)
         result
       end
