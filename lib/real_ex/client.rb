@@ -31,9 +31,6 @@ module RealEx
         h = Net::HTTP.new(uri.host, port)
         h.use_ssl = https
         response = h.request_post(uri.path, xml)
-        puts "** HTTP POST response:"
-        puts response.body
-        
         result = Nokogiri.XML(response.body)
         result
       end
