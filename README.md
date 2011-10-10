@@ -60,3 +60,17 @@ This is a Ruby library for interfacing with the RealEx API ( http://www.realexpa
     recurring_card = RealEx::Recurring::Card.new(:payer => payer, :reference => 'paulcampbell')
 
     recurring_card.destroy!
+
+## Voiding a recurring authorization ##
+
+Transactions are settled nightly. You can void a transaction before it has been settled. You'll need the following information from the existing transaction:
+
+* Order ID
+* Pasref
+* Authcode
+
+Example:
+
+    void = RealEx::Recurring::Void.new(:order_id => 10282, :pasref => 53188434041432, :authcode => 1422322)
+    void.authorize!
+
