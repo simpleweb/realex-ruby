@@ -137,7 +137,27 @@ module RealEx
     
   end
   
-  class Void < Transaction    
+  class Void < Transaction
+    attributes :order_id, :pasref, :authcode
+    
+    def request_type
+      'void'
+    end
+    
+    def to_xml
+      super do |per|
+        per.orderid order_id
+        per.pasref pasref
+        per.authcode authcode
+      end
+    end
+    
+    # timestamp.merchantid.orderid.amount.currency.cardnumber
+    # => timestamp.merchantid.orderid...
+    def hash
+      RealEx::Client.build_hash([RealEx::Client.timestamp, RealEx::Config.merchant_id, order_id, '', '', ''])
+    end
+    
   end
   
   class Settle < Transaction
