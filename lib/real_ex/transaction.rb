@@ -1,12 +1,12 @@
 module RealEx
   class Transaction
     include Initializer
-    attributes :card, :amount, :order_id, :currency, :autosettle, :variable_reference, :remote_uri, :real_vault_uri, :receipt_in_uri
+    attributes :card, :amount, :order_id, :currency, :autosettle, :variable_reference, :remote_uri, :real_vault_uri
     attr_accessor :comments
     attr_accessor :authcode, :pasref
-    
+
     REQUEST_TYPES = ['auth', 'manual', 'offline', 'tss', 'payer-new', 'payer-edit', 'card-new', 'card-update-card', 'card-cancel-card']
-    
+
     def initialize(hash = {})
       super(hash)
       self.comments ||= []
@@ -14,17 +14,16 @@ module RealEx
       self.currency ||= RealEx::Config.currency || 'EUR'
       self.remote_uri ||= RealEx::Config.remote_uri || 'https://epage.payandshop.com/epage-remote.cgi'
       self.real_vault_uri ||= RealEx::Config.real_vault_uri || 'https://epage.payandshop.com/epage-remote-plugins.cgi'
-      self.receipt_in_uri ||= RealEx::Config.receipt_in_uri || 'https://epage.payandshop.com/epage-remote-plugins.cgi'
     end
-    
+
     def request_type
       self.class.name.split('::').last.downcase
     end
-    
+
     def autosettle?
       autosettle
     end
-    
+
     def to_xml(&block)
       xml = RealEx::Client.build_xml(request_type) do |r|
         r.merchantid RealEx::Config.merchant_id
@@ -45,7 +44,7 @@ module RealEx
         r.sha1hash hash
       end
     end
-    
+
     def hash
       RealEx::Client.build_hash([RealEx::Client.timestamp, RealEx::Config.merchant_id, order_id, '', '', ''])
     end
@@ -55,17 +54,17 @@ module RealEx
     end
 
   end
-  
+
   class Authorization < Transaction
     attributes :shipping_address, :billing_address, :customer_number, :product_id, :customer_ip_address
     attributes :offline, :manual
-    
+
     def initialize(hash = {})
       super(hash)
       self.manual ||= false
       self.offline ||= false
     end
-    
+
     REQUEST_TYPES.each do |type|
       class_eval do
         define_method("#{type}=") do |boolean|  # def manual=(boolean)
@@ -77,15 +76,15 @@ module RealEx
         end                                     # end
       end
     end
-    
+
     def request_type
       @request_type ||= 'auth'
     end
-    
+
     def request_type=(type)
       @request_type = type if REQUEST_TYPES.include?(type)
     end
-    
+
     def to_xml
       super do |r|
         r.amount(amount, :currency => currency) unless offline?
@@ -118,32 +117,32 @@ module RealEx
         end
       end
     end
-    
+
     def hash
       RealEx::Client.build_hash([RealEx::Client.timestamp, RealEx::Config.merchant_id, order_id, (amount unless offline?), (currency unless offline?), (card.number unless offline?)])
     end
-    
+
     def rebate!
-      
+
     end
-    
+
     def void!
-      
+
     end
-    
+
     def settle!
-      
+
     end
-    
+
   end
-  
+
   class Void < Transaction
     attributes :order_id, :pasref, :authcode
-    
+
     def request_type
       'void'
     end
-    
+
     def to_xml
       super do |per|
         per.orderid order_id
@@ -151,26 +150,26 @@ module RealEx
         per.authcode authcode
       end
     end
-    
+
     # timestamp.merchantid.orderid.amount.currency.cardnumber
     # => timestamp.merchantid.orderid...
     def hash
       RealEx::Client.build_hash([RealEx::Client.timestamp, RealEx::Config.merchant_id, order_id, '', '', ''])
     end
-    
+
   end
-  
+
   class Settle < Transaction
   end
-  
+
   class Rebate < Transaction
-    
+
     attr_accessor :refund_password
-    
+
     def refund_hash
       Digest::SHA1.hexdigest((refund_password || RealEx::Config.refund_password || ''))
     end
-    
+
     def to_xml(&block)
       super do |per|
         per.amount(amount, :currency => currency)
@@ -186,7 +185,7 @@ module RealEx
       end
     end
 
-    
+
     def hash
       RealEx::Client.build_hash([RealEx::Client.timestamp, RealEx::Config.merchant_id, order_id, amount, currency, ''])
     end

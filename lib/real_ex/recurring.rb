@@ -3,12 +3,7 @@ module RealEx
 
     class Transaction < RealEx::Transaction
       def authorize!
-        if request_type == 'receipt-in'
-          xml = RealEx::Client.call(receipt_in_uri, to_xml)
-        else
-          xml = RealEx::Client.call(real_vault_uri, to_xml)
-        end
-
+        xml = RealEx::Client.call(real_vault_uri, to_xml)
         RealEx::Response.new_from_xml(xml)
       end
     end
@@ -61,18 +56,18 @@ module RealEx
       def hash
         RealEx::Client.build_hash([RealEx::Client.timestamp, RealEx::Config.merchant_id, order_id, '', '', reference])
       end
-      
+
       def save!
         authorize!
       end
-      
+
       def update!
         self.update = true
         authorize!
       end
 
     end
-    
+
     class Card < Transaction
       attributes :card, :payer, :update, :reference, :cancel
 
@@ -85,7 +80,7 @@ module RealEx
           @request_type = 'card-new'
         end
       end
-      
+
       def to_xml
         super do |per|
           per.card do |c|
@@ -98,7 +93,7 @@ module RealEx
           end
         end
       end
-      
+
       # 20030516181127.yourmerchantid.uniqueid…smithj01.John Smith.498843******9991
       def hash
         if cancel
@@ -109,11 +104,11 @@ module RealEx
           RealEx::Client.build_hash([RealEx::Client.timestamp, RealEx::Config.merchant_id, order_id, '', '', payer.reference,card.cardholder_name,card.number])
         end
       end
-      
+
       def save!
         authorize!
       end
-      
+
       def update!
         self.update = true
         authorize!
@@ -125,15 +120,15 @@ module RealEx
       end
 
     end
-    
+
     class Authorization < Transaction
       attributes :payer, :reference, :customer_number, :variable_reference, :product_id
       attributes :billing_address, :shipping_address
-      
+
       def request_type
         'receipt-in'
       end
-      
+
       def to_xml
         super do |per|
           per.amount(amount, :currency => currency)
@@ -160,13 +155,13 @@ module RealEx
           end
         end
       end
-      
+
       # timesttimestamp.merchantid.orderid.amount.currency.payerref
       def hash
         RealEx::Client.build_hash([RealEx::Client.timestamp, RealEx::Config.merchant_id, order_id, amount, currency, payer.reference])
       end
-      
+
     end
-    
+
   end
 end

@@ -18,8 +18,10 @@ module RealEx
         xml.target!
       end
 
-      def call(url,xml)
-        uri = URI.parse(url)
+      def call(url, xml)
+        proxy_url = RealEx::Config.proxy_url
+
+        uri = URI.parse(proxy_url || url)
 
         https = (uri.scheme == 'https')
         if [80, 443].include?(uri.port)
@@ -29,6 +31,8 @@ module RealEx
         end
 
         h = Net::HTTP.new(uri.host, port)
+        h.add_field("X-Proxy-To", url) if proxy_url
+
         h.use_ssl = https
         response = h.request_post(uri.path, xml)
         result = Nokogiri.XML(response.body)
