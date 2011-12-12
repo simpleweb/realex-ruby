@@ -1,5 +1,6 @@
 module RealEx
   class Client
+
     class << self
 
       def timestamp
@@ -18,23 +19,18 @@ module RealEx
         xml.target!
       end
 
-      def call(url, xml)
+      def call(url, xml, options = {})
         proxy_url = RealEx::Config.proxy_url
+        uri = proxy_url || url
 
-        uri = URI.parse(proxy_url || url)
+        direct = options.delete(:direct)
+        uri = url if !!direct # force direct call for secure details
 
-        https = (uri.scheme == 'https')
-        if [80, 443].include?(uri.port)
-          port = https ? 443 : 80
-        else
-          port = uri.port
-        end
-
-        h = Net::HTTP.new(uri.host, port)
-        h.add_field("X-Proxy-To", url) if proxy_url
-
-        h.use_ssl = https
-        response = h.request_post(uri.path, xml)
+        options = { :body => xml }
+        options.update(:headers => { 'X-Proxy-To' => url }) if proxy_url
+        Rails.logger.debug { "** HTTParty.post(#{uri}, #{options.inspect})" }
+        response = HTTParty.post(uri, options)
+        Rails.logger.debug { "** response => #{response.inspect}" }
         result = Nokogiri.XML(response.body)
         result
       end

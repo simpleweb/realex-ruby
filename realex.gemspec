@@ -73,6 +73,8 @@ Gem::Specification.new do |s|
     s.add_dependency(%q<builder>, [">= 0"])
     s.add_dependency(%q<jeweler>, [">= 0"])
     s.add_dependency(%q<nokogiri>, ["~> 1.4"])
+    s.add_dependency(%q<httparty>, [">= 0"])
+
   end
 end
 

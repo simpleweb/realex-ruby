@@ -71,6 +71,11 @@ module RealEx
     class Card < Transaction
       attributes :card, :payer, :update, :reference, :cancel
 
+      def authorize!
+        xml = RealEx::Client.call(real_vault_uri, to_xml, :direct => true)
+        RealEx::Response.new_from_xml(xml)
+      end
+
       def request_type
         if cancel
           @request_type = 'card-cancel-card'

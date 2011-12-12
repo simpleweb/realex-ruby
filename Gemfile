@@ -1,6 +1,7 @@
 source :rubygems
 gem 'nokogiri'
 gem 'builder'
+gem 'httparty'
 
 group :development do
   gem 'jeweler'
