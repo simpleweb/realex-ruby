@@ -27,10 +27,8 @@ module RealEx
         uri = url if !!direct # force direct call for secure details
 
         options = { :body => xml }
-        options.update(:headers => { 'X-Proxy-To' => url }) if proxy_url
-        Rails.logger.debug { "** HTTParty.post(#{uri}, #{options.inspect})" }
+        options.update(:headers => { 'X-Proxy-To' => url }) if proxy_url && !direct
         response = HTTParty.post(uri, options)
-        Rails.logger.debug { "** response => #{response.inspect}" }
         result = Nokogiri.XML(response.body)
         result
       end
